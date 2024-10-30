@@ -1,0 +1,68 @@
+h4 {
+    font-family: sans-serif;
+    margin: 0px 0px 0px 10px;
+}
+
+.dns {
+    margin: 0px 0px 0px 10px;
+    font-family: "Fredoka", sans-serif;  
+}
+
+h3 {
+    font-family: sans-serif;
+    margin: 0px 0px 0px 10px;
+}
+
+a {
+    font-family: sans-serif;
+}
+
+body {
+  background-image: url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1zm4gphRMcH0dHKDQhdmgujKNrxJI9Bdv2uaVeets7g&s");
+  background-size: 100vw 100vh;
+}
+
+h1 {
+  font-family: "Fredoka", sans-serif;
+  margin: 5px 0px 5px 0px;
+}
+
+h2 {
+    font-family: "Oswald", sans-serif;
+}
+
+.gradient {
+background: linear-gradient(to right, #3381ff, 
+                    #8400ff, #3381ff, #8400ff);
+    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text;
+ background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.brand {
+font-family: "Roboto Condensed", sans-serif;
+}
+
+.card-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+
+  .card {
+    flex: 0 0 auto;
+    margin: 50px 118px 10px 118px;
+  }
+}

@@ -1,0 +1,2 @@
+<h1> Welcome to Arctic Signer's Offical Website!</h1>
+<p>Arctic is a revolutionary new tool that offers a private and secure way to sign iOS applications. Unlike ESign, Arctic operates without logs or tracking, ensuring complete confidentiality. Arctic allows you to sign any IPA file with any certificate, including ESign certificates, without compromising your privacy. Arctic empowers you with complete control over your signing process, providing a powerful and flexible alternative to ESign. </p>

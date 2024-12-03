@@ -1,2 +1,7 @@
-<h1> Welcome to Arctic Signer's Offical Website!</h1>
-<p>Arctic is a revolutionary new tool that offers a private and secure way to sign iOS applications. Unlike ESign, Arctic operates without logs or tracking, ensuring complete confidentiality. Arctic allows you to sign any IPA file with any certificate, including ESign certificates, without compromising your privacy. Arctic empowers you with complete control over your signing process, providing a powerful and flexible alternative to ESign. </p>
+<h1> <strong style="color: green"> Hi, I'm Arctic Signer! </strong> </h1>
+<a href="https://usearcticsigner.github.io"> <strong style="color: green"> This is my website. </strong></a>
+<p> Hi, I am a young coder making a bunch of projects.
+My main coding skils are html and css and i'm learning javascript and swift.</p>
+<p>
+  Arctic development is starting soon!
+</p>

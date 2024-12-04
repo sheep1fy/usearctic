@@ -3,11 +3,6 @@ h4 {
     margin: 0px 0px 0px 10px;
 }
 
-.dns {
-    margin: 0px 0px 0px 10px;
-    font-family: "Fredoka", sans-serif;  
-}
-
 h3 {
     font-family: sans-serif;
     margin: 0px 0px 0px 10px;
@@ -50,19 +45,4 @@ background: linear-gradient(to right, #3381ff,
     100% {
         background-position: 0% 50%;
     }
-}
-
-.brand {
-font-family: "Roboto Condensed", sans-serif;
-}
-
-.card-scroll {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-
-  .card {
-    flex: 0 0 auto;
-    margin: 50px 118px 10px 118px;
   }
-}

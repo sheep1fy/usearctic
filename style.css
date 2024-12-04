@@ -46,3 +46,7 @@ background: linear-gradient(to right, #3381ff,
         background-position: 0% 50%;
     }
   }
+
+.logo {
+    margin: 100px 0px 0px 0px;
+}

@@ -46,3 +46,7 @@ background: linear-gradient(to right, #7303fc,
         background-position: 0% 50%;
     }
   }
+
+.button {
+    color: #000;
+}

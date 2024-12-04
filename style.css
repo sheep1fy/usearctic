@@ -27,8 +27,8 @@ h2 {
 }
 
 .gradient {
-background: linear-gradient(to right, #3381ff, 
-                    #8400ff, #3381ff, #8400ff);
+background: linear-gradient(to right, #7303fc, 
+                    #030bfc, #7303fc, #030bfc);
     -webkit-text-fill-color: transparent;
     -webkit-background-clip: text;
  background-size: 400% 400%;

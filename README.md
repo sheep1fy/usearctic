@@ -3,5 +3,5 @@
 <p> Hi, I am a young coder making a bunch of projects.
 My main coding skils are html and css and i'm learning javascript and swift.</p>
 <p>
-  Arctic development is starting soon!
+  Web Redesign in progress
 </p>

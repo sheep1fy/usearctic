@@ -1,13 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap');
 
 h4 {
-    font-family: sans-serif;
-    margin: 0px 0px 0px 10px;
+font-family: "Roboto", sans-serif;
 }
 
 h3 {
-    font-family: sans-serif;
-    margin: 0px 0px 5px 0px;
+font-family: "Roboto", sans-serif;
 }
 
 a {
@@ -20,12 +18,11 @@ body {
 }
 
 h1 {
-  font-family: "Fredoka", sans-serif;
-  margin: 5px 0px 3px 0px;
+ font-family: "Roboto", sans-serif;
 }
 
 h2 {
-    font-family: "Oswald", sans-serif;
+    font-family: "Roboto", sans-serif;
 }
 
 .gradient {

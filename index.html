@@ -1,14 +1,994 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Arctic Website</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <link rel="icon" type="image/x-icon" href="/image/Favicon.png">
-  </head>
-  <body>
-    <h1>Arctic Test Website 08</h1>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arctic Signer — iOS Sideloading, Reimagined</title>
+  <link rel="icon" type="image/x-icon" href="/image/Favicon.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ice-0: #ffffff;
+      --ice-1: #e8f6ff;
+      --ice-2: #bae3ff;
+      --ice-3: #7cc8f5;
+      --ice-4: #38a8e0;
+      --aurora-1: #0ff0c0;
+      --aurora-2: #38a8e0;
+      --aurora-3: #7b4fff;
+      --deep: #030b18;
+      --dark: #071220;
+      --panel: rgba(10, 28, 52, 0.55);
+      --panel-border: rgba(120, 200, 255, 0.18);
+      --glow: rgba(56, 168, 224, 0.35);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--deep);
+      color: var(--ice-1);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── Custom cursor ── */
+    .cursor {
+      position: fixed;
+      width: 12px; height: 12px;
+      background: var(--aurora-1);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, background 0.2s;
+      mix-blend-mode: screen;
+    }
+    .cursor-ring {
+      position: fixed;
+      width: 36px; height: 36px;
+      border: 1.5px solid rgba(56,168,224,0.5);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: transform 0.12s ease, width 0.25s, height 0.25s;
+    }
+    body:hover .cursor { opacity: 1; }
+
+    /* ── Aurora canvas background ── */
+    #aurora-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Snowflake particles ── */
+    .snow-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .snowflake {
+      position: absolute;
+      top: -20px;
+      color: rgba(186,227,255,0.6);
+      font-size: 1em;
+      animation: snowfall linear infinite;
+      user-select: none;
+    }
+    @keyframes snowfall {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ── Navbar ── */
+    .navbar-arctic {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(3, 11, 24, 0.6);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--panel-border);
+      transition: background 0.3s;
+    }
+    .navbar-arctic .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+      color: var(--ice-0);
+    }
+    .brand-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--aurora-1), var(--aurora-2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--ice-2);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--aurora-1); }
+    .nav-cta {
+      background: linear-gradient(135deg, var(--aurora-2), var(--aurora-1));
+      color: var(--deep) !important;
+      padding: 0.45rem 1.2rem;
+      border-radius: 100px;
+      font-weight: 700 !important;
+    }
+
+    /* ── Section base ── */
+    section { position: relative; z-index: 2; }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8rem 1.5rem 5rem;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--aurora-1);
+      background: rgba(15, 240, 192, 0.08);
+      border: 1px solid rgba(15, 240, 192, 0.25);
+      padding: 0.35rem 1rem;
+      border-radius: 100px;
+      margin-bottom: 1.8rem;
+      animation: fadeUp 0.8s ease both;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--aurora-1);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+    .hero-title {
+      font-size: clamp(3rem, 8vw, 7rem);
+      font-weight: 800;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.9s 0.1s ease both;
+    }
+    .hero-title .line-1 { display: block; color: var(--ice-0); }
+    .hero-title .line-2 {
+      display: block;
+      background: linear-gradient(90deg, var(--aurora-2), var(--aurora-1), var(--aurora-3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      max-width: 540px;
+      margin: 0 auto 2.5rem;
+      font-size: 1.1rem;
+      color: var(--ice-2);
+      line-height: 1.7;
+      font-weight: 400;
+      animation: fadeUp 0.9s 0.2s ease both;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 0.9s 0.3s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(24px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    /* ── Buttons ── */
+    .btn-arctic {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.8rem 2rem;
+      border-radius: 100px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.25s;
+      cursor: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-arctic::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: white;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .btn-arctic:hover::after { opacity: 0.08; }
+    .btn-primary-arctic {
+      background: linear-gradient(135deg, var(--aurora-2), var(--aurora-1));
+      color: var(--deep);
+      box-shadow: 0 0 32px rgba(56,168,224,0.4);
+    }
+    .btn-primary-arctic:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 48px rgba(56,168,224,0.6);
+      color: var(--deep);
+    }
+    .btn-ghost-arctic {
+      background: var(--panel);
+      color: var(--ice-1);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(12px);
+    }
+    .btn-ghost-arctic:hover {
+      border-color: var(--aurora-2);
+      color: var(--ice-0);
+      transform: translateY(-2px);
+    }
+
+    /* ── Glass card ── */
+    .glass-card {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
+    .glass-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(56,168,224,0.4);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 30px rgba(56,168,224,0.12);
+    }
+    .card-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1.2rem;
+    }
+    .icon-cyan { background: rgba(15,240,192,0.1); border: 1px solid rgba(15,240,192,0.25); }
+    .icon-blue { background: rgba(56,168,224,0.1); border: 1px solid rgba(56,168,224,0.25); }
+    .icon-purple { background: rgba(123,79,255,0.1); border: 1px solid rgba(123,79,255,0.25); }
+    .icon-teal { background: rgba(20,184,166,0.1); border: 1px solid rgba(20,184,166,0.25); }
+    .icon-sky { background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.25); }
+    .icon-indigo { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25); }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+      color: var(--ice-0);
+    }
+    .card-desc {
+      font-size: 0.9rem;
+      color: var(--ice-2);
+      line-height: 1.65;
+      font-family: 'Space Mono', monospace;
+      font-weight: 400;
+    }
+
+    /* ── Section titles ── */
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--aurora-1);
+      margin-bottom: 0.8rem;
+    }
+    .section-title {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--ice-0);
+      margin-bottom: 1rem;
+    }
+    .section-sub {
+      font-size: 1rem;
+      color: var(--ice-2);
+      line-height: 1.7;
+      max-width: 520px;
+    }
+
+    /* ── Cert pills ── */
+    .cert-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      margin-top: 1.5rem;
+    }
+    .cert-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 1rem;
+      border-radius: 100px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(56,168,224,0.08);
+      border: 1px solid rgba(56,168,224,0.25);
+      color: var(--ice-2);
+      transition: all 0.2s;
+    }
+    .cert-pill:hover {
+      background: rgba(56,168,224,0.18);
+      border-color: var(--aurora-2);
+      color: var(--ice-0);
+      transform: scale(1.04);
+    }
+    .cert-pill .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--aurora-1);
+    }
+
+    /* ── Epic Store badge ── */
+    .epic-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 1.2rem;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--ice-2);
+      margin-top: 1.5rem;
+      backdrop-filter: blur(10px);
+    }
+    .epic-badge .powered-logo {
+      font-weight: 700;
+      color: var(--ice-0);
+      font-size: 0.85rem;
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      backdrop-filter: blur(20px);
+      overflow: hidden;
+      margin: 5rem 0;
+    }
+    .stat-item {
+      padding: 2rem 1.5rem;
+      text-align: center;
+      border-right: 1px solid var(--panel-border);
+      transition: background 0.3s;
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-item:hover { background: rgba(56,168,224,0.05); }
+    .stat-number {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      background: linear-gradient(90deg, var(--aurora-2), var(--aurora-1));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ice-2);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+    }
+
+    /* ── Repo viewer mockup ── */
+    .repo-window {
+      background: rgba(5, 15, 30, 0.85);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+    }
+    .repo-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.85rem 1.2rem;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--panel-border);
+    }
+    .win-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .wd-red { background: #ff5f57; }
+    .wd-yellow { background: #febc2e; }
+    .wd-green { background: #28c840; }
+    .repo-url {
+      flex: 1;
+      text-align: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--ice-2);
+    }
+    .repo-body { padding: 1.2rem; }
+    .repo-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1rem;
+      border-radius: 12px;
+      margin-bottom: 0.5rem;
+      transition: background 0.2s;
+      cursor: none;
+    }
+    .repo-item:hover { background: rgba(56,168,224,0.08); }
+    .repo-thumb {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .repo-info .app-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--ice-0);
+    }
+    .repo-info .app-dev {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--ice-3);
+      margin-top: 0.15rem;
+    }
+    .repo-install {
+      margin-left: auto;
+      padding: 0.3rem 0.8rem;
+      background: rgba(56,168,224,0.15);
+      border: 1px solid rgba(56,168,224,0.3);
+      border-radius: 100px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--aurora-2);
+      font-weight: 700;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--panel-border);
+      padding: 3rem 2rem;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      background: rgba(3,11,24,0.8);
+      backdrop-filter: blur(20px);
+    }
+    .footer-brand {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(90deg, var(--aurora-2), var(--aurora-1));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      list-style: none;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      color: var(--ice-2);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--aurora-1); }
+    .footer-copy {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: rgba(186,227,255,0.35);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Divider ── */
+    .arctic-divider {
+      width: 1px;
+      height: 80px;
+      background: linear-gradient(to bottom, transparent, var(--aurora-2), transparent);
+      margin: 0 auto 5rem;
+      opacity: 0.5;
+    }
+
+    /* ── Glow blob ── */
+    .glow-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .stat-item:nth-child(2) { border-right: none; }
+      .stat-item:nth-child(3) { border-right: 1px solid var(--panel-border); }
+    }
+
+    /* Scroll-reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* Ice crack overlay on hero */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(56,168,224,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .tag-free  { color: #28c840; border-color: rgba(40,200,64,0.3); background: rgba(40,200,64,0.07); }
+    .tag-paid  { color: #febc2e; border-color: rgba(254,188,46,0.3); background: rgba(254,188,46,0.07); }
+
+    section.py-section { padding: 6rem 0; }
+  </style>
+</head>
+<body>
+
+  <!-- Custom cursor -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- Aurora canvas -->
+  <canvas id="aurora-canvas"></canvas>
+
+  <!-- Snow -->
+  <div class="snow-container" id="snow"></div>
+
+  <!-- ── Navbar ── -->
+  <nav class="navbar-arctic">
+    <a href="#" class="brand">
+      <div class="brand-icon">❄</div>
+      Arctic Signer
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#certs">Certs</a></li>
+      <li><a href="#repos">Repos</a></li>
+      <li><a href="#epic">Epic Store</a></li>
+      <li><a href="#download" class="nav-cta">Download</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero" id="home">
+    <div class="glow-blob" style="width:700px;height:400px;background:rgba(56,168,224,0.07);top:-100px;left:50%;transform:translateX(-50%);"></div>
+    <span class="hero-eyebrow">iOS Sideloading, Evolved</span>
+    <h1 class="hero-title">
+      <span class="line-1">Arctic</span>
+      <span class="line-2">Signer</span>
+    </h1>
+    <p class="hero-sub">
+      The most beautiful iOS sideloading experience ever built. Every cert type. Epic Games Store built-in. A repo browser that doesn't suck.
+    </p>
+    <div class="hero-actions">
+      <a href="#download" class="btn-arctic btn-primary-arctic">❄ Download Free</a>
+      <a href="#features" class="btn-arctic btn-ghost-arctic">See Features →</a>
+    </div>
+  </section>
+
+  <!-- ── Stats ── -->
+  <div class="container" style="position:relative;z-index:2;">
+    <div class="stats-bar reveal">
+      <div class="stat-item">
+        <div class="stat-number">12+</div>
+        <div class="stat-label">Cert Types</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">∞</div>
+        <div class="stat-label">Apps</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">1</div>
+        <div class="stat-label">Tap Install</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">0</div>
+        <div class="stat-label">Jailbreak Needed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Features ── -->
+  <section class="py-section" id="features" style="position:relative;z-index:2;">
+    <div class="glow-blob" style="width:500px;height:300px;background:rgba(15,240,192,0.05);top:0;right:-100px;"></div>
+    <div class="container">
+      <div class="text-center mb-5 reveal">
+        <div class="section-label">What's inside</div>
+        <h2 class="section-title">Everything you need.<br>Nothing you don't.</h2>
+        <p class="section-sub mx-auto">Arctic Signer packs every essential sideloading tool into one glacially clean interface.</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4 reveal">
+          <div class="glass-card h-100">
+            <div class="card-icon icon-cyan">🔐</div>
+            <div class="card-title">Universal Cert Support</div>
+            <div class="card-desc">Free certs, paid certs, enterprise, developer — every signing method supported. No hoops, no switching tools.</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 reveal">
+          <div class="glass-card h-100">
+            <div class="card-icon icon-blue">🕹</div>
+            <div class="card-title">Epic Games Store Built-In</div>
+            <div class="card-desc">Browse, install, and update games directly from the Epic Games Store — no extra steps, fully integrated.</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 reveal">
+          <div class="glass-card h-100">
+            <div class="card-icon icon-purple">📦</div>
+            <div class="card-title">Repo Browser</div>
+            <div class="card-desc">Add custom repos, browse thousands of apps, and install with one tap. Full AltStore & Feather repo compatibility.</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 reveal">
+          <div class="glass-card h-100">
+            <div class="card-icon icon-teal">♻️</div>
+            <div class="card-title">Auto Re-Signing</div>
+            <div class="card-desc">Apps re-sign themselves before they expire. Set it once — Arctic handles the rest silently in the background.</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 reveal">
+          <div class="glass-card h-100">
+            <div class="card-icon icon-sky">📡</div>
+            <div class="card-title">OTA Installation</div>
+            <div class="card-desc">Install apps over-the-air directly to your device. No cable, no Mac required. Just tap and go.</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4 reveal">
+          <div class="glass-card h-100">
+            <div class="card-icon icon-indigo">🎨</div>
+            <div class="card-title">Beautiful by Design</div>
+            <div class="card-desc">Every screen, every animation, every transition — crafted with the obsessive polish you'd expect from a native app.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="arctic-divider"></div>
+
+  <!-- ── Cert Types ── -->
+  <section class="py-section" id="certs" style="position:relative;z-index:2;">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-5 reveal">
+          <div class="section-label">Certificates</div>
+          <h2 class="section-title">Every cert.<br>Every workflow.</h2>
+          <p class="section-sub">Whether you're a developer with a paid account or a casual user on a free cert — Arctic Signer has you fully covered.</p>
+          <div class="cert-grid">
+            <span class="cert-pill tag-free"><span class="dot" style="background:#28c840;"></span>Free Dev Cert</span>
+            <span class="cert-pill tag-paid"><span class="dot" style="background:#febc2e;"></span>Paid Dev Cert</span>
+            <span class="cert-pill"><span class="dot"></span>Enterprise Cert</span>
+            <span class="cert-pill"><span class="dot"></span>Revoked Recovery</span>
+            <span class="cert-pill"><span class="dot"></span>Custom Bundle ID</span>
+            <span class="cert-pill"><span class="dot"></span>Multi-App Signing</span>
+            <span class="cert-pill"><span class="dot"></span>Sideloadly Compat</span>
+            <span class="cert-pill"><span class="dot"></span>TrollStore Compat</span>
+            <span class="cert-pill"><span class="dot"></span>AltStore Compat</span>
+            <span class="cert-pill"><span class="dot"></span>Feather Compat</span>
+          </div>
+        </div>
+        <div class="col-lg-7 reveal">
+          <div class="glass-card">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <span style="font-weight:700;color:var(--ice-0);">Signing a new app</span>
+              <span class="cert-pill tag-free"><span class="dot" style="background:#28c840;"></span>Free Cert Active</span>
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:0.8rem;line-height:2;color:var(--ice-2);">
+              <div style="color:var(--aurora-1);">▶ Importing IPA...</div>
+              <div>  bundle.id → com.custom.myapp</div>
+              <div>  entitlements → patched ✓</div>
+              <div style="color:var(--aurora-1);">▶ Signing with Free Cert...</div>
+              <div>  validity → 7 days (auto-renew on)</div>
+              <div>  certificate → A1B2C3D4... ✓</div>
+              <div style="color:var(--aurora-1);">▶ Installing OTA...</div>
+              <div style="color:#28c840;font-weight:700;">  ✓ Installed successfully in 3.2s</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="arctic-divider"></div>
+
+  <!-- ── Repo Viewer ── -->
+  <section class="py-section" id="repos" style="position:relative;z-index:2;">
+    <div class="glow-blob" style="width:400px;height:400px;background:rgba(123,79,255,0.06);bottom:0;left:-50px;"></div>
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6 reveal" style="order:2;order:1;">
+          <div class="repo-window">
+            <div class="repo-titlebar">
+              <div class="win-dot wd-red"></div>
+              <div class="win-dot wd-yellow"></div>
+              <div class="win-dot wd-green"></div>
+              <div class="repo-url">arctic://repos/featured</div>
+            </div>
+            <div class="repo-body">
+              <div style="font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--ice-3);margin-bottom:1rem;letter-spacing:0.1em;">FEATURED APPS · 2,840 available</div>
+              <div class="repo-item">
+                <div class="repo-thumb" style="background:rgba(56,168,224,0.15);">🎮</div>
+                <div class="repo-info">
+                  <div class="app-name">Delta Emulator</div>
+                  <div class="app-dev">rileytestut · v1.6.2</div>
+                </div>
+                <div class="repo-install">GET</div>
+              </div>
+              <div class="repo-item">
+                <div class="repo-thumb" style="background:rgba(15,240,192,0.1);">🎵</div>
+                <div class="repo-info">
+                  <div class="app-name">Spotify++</div>
+                  <div class="app-dev">Community · v8.9.30</div>
+                </div>
+                <div class="repo-install">GET</div>
+              </div>
+              <div class="repo-item">
+                <div class="repo-thumb" style="background:rgba(254,188,46,0.1);">🎬</div>
+                <div class="repo-info">
+                  <div class="app-name">YouTube ReVanced</div>
+                  <div class="app-dev">ReVanced · v18.48.41</div>
+                </div>
+                <div class="repo-install">GET</div>
+              </div>
+              <div class="repo-item">
+                <div class="repo-thumb" style="background:rgba(255,95,87,0.1);">🔓</div>
+                <div class="repo-info">
+                  <div class="app-name">UTM Virtual Machines</div>
+                  <div class="app-dev">utmapp · v4.5.3</div>
+                </div>
+                <div class="repo-install">GET</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6 reveal" style="order:1;order:2;">
+          <div class="section-label">Repo Viewer</div>
+          <h2 class="section-title">Your app store,<br>your rules.</h2>
+          <p class="section-sub">Browse curated repos or add your own. Arctic Signer speaks every repo format — AltStore, Feather, and more.</p>
+          <ul style="list-style:none;padding:0;margin-top:1.5rem;display:flex;flex-direction:column;gap:0.75rem;">
+            <li style="display:flex;gap:0.75rem;align-items:flex-start;font-size:0.92rem;color:var(--ice-2);">
+              <span style="color:var(--aurora-1);font-size:1rem;flex-shrink:0;">✦</span>
+              Add unlimited repos via URL
+            </li>
+            <li style="display:flex;gap:0.75rem;align-items:flex-start;font-size:0.92rem;color:var(--ice-2);">
+              <span style="color:var(--aurora-1);font-size:1rem;flex-shrink:0;">✦</span>
+              One-tap install directly from the browser
+            </li>
+            <li style="display:flex;gap:0.75rem;align-items:flex-start;font-size:0.92rem;color:var(--ice-2);">
+              <span style="color:var(--aurora-1);font-size:1rem;flex-shrink:0;">✦</span>
+              Automatic update notifications
+            </li>
+            <li style="display:flex;gap:0.75rem;align-items:flex-start;font-size:0.92rem;color:var(--ice-2);">
+              <span style="color:var(--aurora-1);font-size:1rem;flex-shrink:0;">✦</span>
+              Full AltStore JSON & Feather format support
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="arctic-divider"></div>
+
+  <!-- ── Epic Store ── -->
+  <section class="py-section" id="epic" style="position:relative;z-index:2;">
+    <div class="container">
+      <div class="text-center mb-5 reveal">
+        <div class="section-label">Epic Games Store</div>
+        <h2 class="section-title">Your Epic library.<br>On your iPhone.</h2>
+        <p class="section-sub mx-auto">Arctic Signer integrates the Epic Games Store directly — log in, browse your library, and install games. No extra apps.</p>
+      </div>
+      <div class="row g-4 justify-content-center">
+        <div class="col-sm-6 col-lg-3 reveal">
+          <div class="glass-card text-center">
+            <div style="font-size:2.5rem;margin-bottom:1rem;">🛒</div>
+            <div class="card-title">Browse Store</div>
+            <div class="card-desc">Full Epic storefront inside Arctic. Free weekly games included.</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3 reveal">
+          <div class="glass-card text-center">
+            <div style="font-size:2.5rem;margin-bottom:1rem;">📚</div>
+            <div class="card-title">Your Library</div>
+            <div class="card-desc">Every game you own on Epic — accessible and installable in seconds.</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3 reveal">
+          <div class="glass-card text-center">
+            <div style="font-size:2.5rem;margin-bottom:1rem;">⬇️</div>
+            <div class="card-title">Auto-Sign & Install</div>
+            <div class="card-desc">Arctic signs each game with your active cert and installs it automatically.</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3 reveal">
+          <div class="glass-card text-center">
+            <div style="font-size:2.5rem;margin-bottom:1rem;">🔄</div>
+            <div class="card-title">Updates</div>
+            <div class="card-desc">Game updates push straight from Epic — no manual re-signing needed.</div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-4 reveal">
+        <div class="epic-badge">
+          <span>🕹</span>
+          <span>Powered by</span>
+          <span class="powered-logo">EPIC GAMES</span>
+          <span style="color:var(--aurora-1);">— built-in, no extra account needed</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="arctic-divider"></div>
+
+  <!-- ── Download CTA ── -->
+  <section class="py-section" id="download" style="position:relative;z-index:2;text-align:center;">
+    <div class="glow-blob" style="width:600px;height:400px;background:rgba(56,168,224,0.08);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+    <div class="container reveal">
+      <div class="section-label">Get Started</div>
+      <h2 class="section-title" style="font-size:clamp(2.5rem,5vw,4.5rem);">Download<br>Arctic Signer</h2>
+      <p class="section-sub mx-auto mb-4" style="max-width:420px;">Free to use. No jailbreak. No PC required. Supports iOS 14 and above.</p>
+      <div class="hero-actions justify-content-center">
+        <a href="#" class="btn-arctic btn-primary-arctic" style="font-size:1.05rem;padding:1rem 2.5rem;">❄ Download for iOS</a>
+        <a href="#" class="btn-arctic btn-ghost-arctic">View on GitHub →</a>
+      </div>
+      <p style="margin-top:1.5rem;font-family:'Space Mono',monospace;font-size:0.72rem;color:rgba(186,227,255,0.35);">
+        sheep1fy / arctic-signer · MIT License · iOS 14+
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <div class="footer-brand">Arctic Signer</div>
+    <p style="font-size:0.9rem;color:var(--ice-2);margin-bottom:0;">by <strong>sheep1fy</strong></p>
+    <ul class="footer-links">
+      <li><a href="#">Home</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#repos">Repos</a></li>
+      <li><a href="#epic">Epic Store</a></li>
+      <li><a href="#">GitHub</a></li>
+      <li><a href="#">Discord</a></li>
+    </ul>
+    <div class="footer-copy">© 2025 sheep1fy · Arctic Signer · All rights reserved</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    /* ── Cursor ── */
+    const cursor = document.getElementById('cursor');
+    const ring   = document.getElementById('cursorRing');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+    (function animCursor() {
+      cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+      rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+      ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+      requestAnimationFrame(animCursor);
+    })();
+
+    /* ── Aurora canvas ── */
+    const canvas = document.getElementById('aurora-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, t = 0;
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize); resize();
+
+    function aurora() {
+      ctx.clearRect(0, 0, W, H);
+      const palettes = [
+        ['rgba(15,240,192,', 'rgba(56,168,224,'],
+        ['rgba(56,168,224,', 'rgba(123,79,255,'],
+        ['rgba(123,79,255,', 'rgba(15,240,192,'],
+      ];
+      for (let i = 0; i < 3; i++) {
+        const pal = palettes[i];
+        const yBase = H * (0.25 + i * 0.22);
+        const grd = ctx.createLinearGradient(0, yBase - 120, 0, yBase + 120);
+        const alpha = 0.06 + 0.03 * Math.sin(t * 0.4 + i);
+        grd.addColorStop(0, pal[0] + '0)');
+        grd.addColorStop(0.5, pal[0] + alpha + ')');
+        grd.addColorStop(1, pal[0] + '0)');
+        ctx.beginPath();
+        ctx.moveTo(0, yBase);
+        for (let x = 0; x <= W; x += 8) {
+          const y = yBase
+            + Math.sin(x * 0.003 + t * 0.5 + i * 2) * 60
+            + Math.sin(x * 0.007 + t * 0.3 + i) * 30;
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(W, yBase + 200); ctx.lineTo(0, yBase + 200);
+        ctx.closePath();
+        ctx.fillStyle = grd;
+        ctx.fill();
+      }
+      t += 0.008;
+      requestAnimationFrame(aurora);
+    }
+    aurora();
+
+    /* ── Snowflakes ── */
+    const snow = document.getElementById('snow');
+    for (let i = 0; i < 28; i++) {
+      const s = document.createElement('span');
+      s.className = 'snowflake';
+      s.textContent = ['❄','❅','❆','·','•'][Math.floor(Math.random()*5)];
+      s.style.cssText = `
+        left:${Math.random()*100}%;
+        font-size:${0.5+Math.random()*1.2}em;
+        animation-duration:${6+Math.random()*14}s;
+        animation-delay:${-Math.random()*20}s;
+        opacity:${0.3+Math.random()*0.5};
+      `;
+      snow.appendChild(s);
+    }
+
+    /* ── Scroll reveal ── */
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+  </script>
+</body>
 </html>

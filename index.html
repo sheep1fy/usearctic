@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Arctic Signer — iOS Sideloading</title>
+<!-- ∷ Ulepldqg ∷ -->
 <link rel="icon" type="image/x-icon" href="/image/Favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -38,7 +39,6 @@ body{
 /* ═══ CURSOR ═══ */
 #dot{position:fixed;width:6px;height:6px;background:var(--cyan);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .15s;}
 #ring{position:fixed;width:32px;height:32px;border:1.5px solid rgba(77,222,255,0.5);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);}
-body a:hover~#dot,body button:hover~#dot{transform:translate(-50%,-50%) scale(3);}
 
 /* ═══ NOISE OVERLAY ═══ */
 body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:.025;pointer-events:none;z-index:1000;}
@@ -64,12 +64,21 @@ nav{
   letter-spacing:-.01em;margin-right:2rem;text-decoration:none;
   display:flex;align-items:center;gap:.5rem;
 }
+/* ARG: hex pulses subtly after 2 taps */
 .nav-hex{
   width:22px;height:22px;
   background:var(--grad);
   clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
   flex-shrink:0;
+  cursor:none;
+  transition:filter .2s, transform .2s;
+  user-select:none;
 }
+.nav-hex.tapped1{filter:brightness(1.4) drop-shadow(0 0 4px var(--cyan));}
+.nav-hex.tapped2{filter:brightness(2) drop-shadow(0 0 10px var(--cyan));transform:scale(1.15);}
+.nav-hex.unlocking{animation:hexSpin .5s ease-out;}
+@keyframes hexSpin{0%{transform:scale(1.15) rotate(0)}50%{transform:scale(1.4) rotate(180deg)}100%{transform:scale(1) rotate(360deg)}}
+
 .nav-links{display:flex;align-items:center;gap:.2rem;list-style:none;}
 .nav-links a{
   color:var(--muted);text-decoration:none;
@@ -90,6 +99,146 @@ nav{
   box-shadow:0 0 20px rgba(77,222,255,0.3);
 }
 .nav-dl:hover{opacity:.88;box-shadow:0 0 35px rgba(77,222,255,0.5);}
+
+/* ═══ ARG TERMINAL MODAL ═══ */
+#arg-overlay{
+  display:none;
+  position:fixed;inset:0;z-index:9000;
+  background:rgba(5,8,16,0.92);
+  backdrop-filter:blur(20px);
+  align-items:center;justify-content:center;
+}
+#arg-overlay.open{display:flex;}
+#arg-terminal{
+  width:min(620px,92vw);
+  background:#060b18;
+  border:1px solid rgba(77,222,255,0.2);
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 0 80px rgba(77,222,255,0.08),0 40px 80px rgba(0,0,0,0.7);
+  animation:termIn .35s cubic-bezier(.16,1,.3,1);
+}
+@keyframes termIn{from{opacity:0;transform:scale(.94) translateY(20px)}to{opacity:1;transform:none}}
+.term-bar{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.8rem 1.1rem;
+  background:rgba(255,255,255,0.03);
+  border-bottom:1px solid rgba(77,222,255,0.1);
+}
+.term-dot{width:10px;height:10px;border-radius:50%;}
+.td1{background:#ff5f57;}.td2{background:#febc2e;}.td3{background:#28c840;}
+.term-title{
+  margin-left:auto;margin-right:auto;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(77,222,255,0.4);
+}
+.term-body{padding:2rem;}
+#term-log{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;line-height:1.8;
+  color:rgba(168,196,216,0.7);
+  min-height:120px;
+  margin-bottom:1.5rem;
+  white-space:pre-wrap;
+}
+#term-log .cyan{color:var(--cyan);}
+#term-log .purple{color:var(--purple);}
+#term-log .red{color:#ff5f57;}
+#term-log .green{color:#28c840;}
+#term-log .dim{color:rgba(168,196,216,0.28);}
+.term-input-row{
+  display:flex;align-items:center;gap:.8rem;
+  background:rgba(77,222,255,0.04);
+  border:1px solid rgba(77,222,255,0.15);
+  border-radius:8px;
+  padding:.65rem 1rem;
+}
+.term-prompt{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;color:var(--cyan);
+  flex-shrink:0;
+}
+#arg-input{
+  flex:1;
+  background:none;border:none;outline:none;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;color:var(--white);
+  letter-spacing:.05em;text-transform:uppercase;
+  caret-color:var(--cyan);
+}
+#arg-input::placeholder{color:rgba(168,196,216,0.2);text-transform:none;}
+.term-hint{
+  margin-top:1rem;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.65rem;color:rgba(168,196,216,0.2);
+  text-align:right;
+  letter-spacing:.05em;
+}
+
+/* ═══ SUCCESS OVERLAY ═══ */
+#success-overlay{
+  display:none;
+  position:fixed;inset:0;z-index:9100;
+  background:rgba(5,8,16,0.96);
+  backdrop-filter:blur(30px);
+  align-items:center;justify-content:center;
+  flex-direction:column;text-align:center;
+  padding:2rem;
+}
+#success-overlay.open{display:flex;animation:fadeIn .6s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.success-hex{
+  width:72px;height:72px;
+  background:var(--grad);
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  margin:0 auto 2rem;
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{filter:brightness(1) drop-shadow(0 0 10px rgba(77,222,255,0.4))}50%{filter:brightness(1.4) drop-shadow(0 0 30px rgba(77,222,255,0.8))}}
+.success-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--cyan);margin-bottom:1rem;
+}
+.success-title{
+  font-size:clamp(2rem,5vw,3.5rem);font-weight:900;
+  letter-spacing:-.04em;color:var(--white);
+  margin-bottom:1rem;
+}
+.success-title span{
+  background:var(--grad);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.success-lore{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.82rem;line-height:1.9;
+  color:rgba(168,196,216,0.6);
+  max-width:480px;margin:0 auto 2rem;
+  text-align:left;
+  background:rgba(77,222,255,0.04);
+  border:1px solid rgba(77,222,255,0.12);
+  border-radius:10px;
+  padding:1.2rem 1.5rem;
+}
+.success-lore .hl{color:var(--cyan);}
+.success-close{
+  display:inline-flex;align-items:center;gap:.5rem;
+  background:rgba(255,255,255,0.06);
+  border:1px solid var(--border);
+  border-radius:100px;
+  color:var(--off);font-size:.85rem;font-weight:500;
+  padding:.7rem 1.8rem;
+  cursor:none;
+  transition:border-color .2s,color .2s;
+  margin-top:.5rem;
+}
+.success-close:hover{border-color:var(--border-bright);color:var(--white);}
+
+/* ═══ HIDDEN ARG ELEMENTS ═══ */
+/* cipher key hidden in page, discoverable via devtools */
+[data-k]{} /* personelXRKWJCDO */
+.arg-seed{display:none;font-family:'JetBrains Mono',monospace;}
 
 /* ═══ HERO ═══ */
 .hero{
@@ -172,7 +321,6 @@ nav{
 }
 .btn-ghost:hover{border-color:var(--border-bright);color:var(--white);transform:translateY(-2px);}
 
-/* cert preview in hero */
 .hero-certs{
   display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;
   margin-top:3.5rem;
@@ -500,16 +648,76 @@ footer{
 </head>
 <body>
 
+<!-- ARG LAYER 1: HTML comment — discoverable in source -->
+<!-- ❄ 16 18 15 10 5 3 20 1 18 3 20 9 3 ❄ -->
+
+<!-- ARG LAYER 2: Caesar-4 ciphertext in meta — discoverable in source -->
+<meta name="x-sig" content="Tvsnigx evgxmg">
+
+<!-- ARG LAYER 3: Vigenere ciphertext in data attribute — discoverable in devtools -->
+<!-- key: personelXRKWJCDO | cipher: Evfbspx Lqbshb -->
+
+<!-- HIDDEN SEED (display:none) — discoverable in source -->
+<span class="arg-seed" data-k="personelXRKWJCDO" aria-hidden="true">Evfbspx Lqbshb</span>
+
 <div id="dot"></div>
 <div id="ring"></div>
 
-<!-- BG MESH CANVAS -->
 <canvas id="mesh"></canvas>
+
+<!-- ═══ ARG TERMINAL MODAL ═══ -->
+<div id="arg-overlay" role="dialog" aria-modal="true" aria-label="System terminal">
+  <div id="arg-terminal">
+    <div class="term-bar">
+      <div class="term-dot td1"></div>
+      <div class="term-dot td2"></div>
+      <div class="term-dot td3"></div>
+      <div class="term-title">arctic — zsh — 80×24</div>
+    </div>
+    <div class="term-body">
+      <div id="term-log"></div>
+      <div class="term-input-row">
+        <span class="term-prompt">❯</span>
+        <input id="arg-input" type="text" autocomplete="off" spellcheck="false" placeholder="enter access code...">
+      </div>
+      <div class="term-hint">press esc to close · case insensitive</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SUCCESS OVERLAY ═══ -->
+<div id="success-overlay">
+  <div class="success-hex"></div>
+  <div class="success-tag">// access granted · project arctic</div>
+  <div class="success-title">You found<br><span>the signal.</span></div>
+  <div class="success-lore">
+<span class="hl">sheep1fy@arctic ~ $</span> cat /classified/readme.txt
+<br><br>
+Three ciphers. One truth.
+<br>
+Code I   → numeric transposition
+<br>
+Code II  → caesar shift, -4
+<br>
+Code III → vigenere · two languages · hardest
+<br><br>
+<span class="hl">key fragment:</span> personelXRKWJCDO
+<span class="hl">glyph:</span>       Ulepldqg
+<br><br>
+What you do with this is up to you.
+<br>
+There may be more.
+<br><br>
+<span style="color:rgba(168,196,216,0.25)">— sheep1fy · baa. ❄</span>
+  </div>
+  <button class="success-close" onclick="closeSuccess()">← return to arctic</button>
+</div>
 
 <!-- NAV -->
 <nav>
   <a class="nav-brand" href="#">
-    <div class="nav-hex"></div>
+    <!-- ARG TRIGGER: triple-click this hex -->
+    <div class="nav-hex" id="arg-hex" title="❄"></div>
     Arctic Signer
   </a>
   <ul class="nav-links">
@@ -546,18 +754,19 @@ footer{
 </section>
 
 <!-- STATS -->
+<!-- ARG: numbers in aria-label — discoverable via accessibility tree / devtools -->
 <section class="stats-section s">
   <div class="wrap">
     <div class="stats-grid rv">
-      <div class="stat-cell">
+      <div class="stat-cell" aria-label="stat-16-18-15">
         <div class="stat-n"><span>3</span></div>
         <div class="stat-l">Cert Formats</div>
       </div>
-      <div class="stat-cell">
+      <div class="stat-cell" aria-label="stat-10-5-3-20">
         <div class="stat-n"><span>0</span></div>
         <div class="stat-l">Jailbreak Required</div>
       </div>
-      <div class="stat-cell">
+      <div class="stat-cell" aria-label="stat-1-18-3-20-9-3">
         <div class="stat-n"><span>1×</span></div>
         <div class="stat-l">Tap to Install</div>
       </div>
@@ -731,6 +940,7 @@ footer{
 </section>
 
 <!-- FOOTER -->
+<!-- ARG: Ulepldqg watermark in footer — visible but context-free -->
 <footer class="s">
   <div class="ft-brand">
     <div class="nav-hex" style="width:18px;height:18px;"></div>
@@ -744,11 +954,15 @@ footer{
     <li><a href="#">GitHub</a></li>
     <li><a href="#">Discord</a></li>
   </ul>
-  <div class="ft-copy">© 2025 sheep1fy</div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;">
+    <div class="ft-copy">© 2025 sheep1fy</div>
+    <!-- ARG: glyph Ulepldqg embedded as faded footer text -->
+    <div style="font-family:'JetBrains Mono',monospace;font-size:.55rem;color:rgba(77,222,255,0.08);letter-spacing:.12em;user-select:none;" title="">Ulepldqg</div>
+  </div>
 </footer>
 
 <script>
-/* cursor */
+/* ═══ CURSOR ═══ */
 const dot=document.getElementById('dot'),ring=document.getElementById('ring');
 let mx=0,my=0,rx=0,ry=0;
 document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
@@ -759,15 +973,15 @@ document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
   requestAnimationFrame(tick);
 })();
 
-/* mesh bg */
+/* ═══ MESH BG ═══ */
 const cv=document.getElementById('mesh'),c=cv.getContext('2d');
 let W,H,t=0;
 const rsz=()=>{W=cv.width=innerWidth;H=cv.height=innerHeight;};
 addEventListener('resize',rsz);rsz();
 const orbs=[
-  {x:.25,y:.3,r:500,col:[77,222,255],s:.00035,p:0},
-  {x:.75,y:.6,r:450,col:[167,139,250],s:.00028,p:2.1},
-  {x:.5 ,y:.85,r:380,col:[77,150,255],s:.0004,p:4.5},
+  {x:.25,y:.3,r:500,col:'77,222,255',s:.00035,p:0},
+  {x:.75,y:.6,r:450,col:'167,139,250',s:.00028,p:2.1},
+  {x:.5 ,y:.85,r:380,col:'77,150,255',s:.0004,p:4.5},
 ];
 function drawMesh(){
   c.clearRect(0,0,W,H);
@@ -781,18 +995,18 @@ function drawMesh(){
     c.beginPath();c.arc(cx2,cy2,o.r,0,Math.PI*2);
     c.fillStyle=gr;c.fill();
   });
-  t+=1;requestAnimationFrame(drawMesh);
+  t++;requestAnimationFrame(drawMesh);
 }
 drawMesh();
 
-/* snow */
+/* ═══ SNOW ═══ */
 const sc=document.createElement('div');
 sc.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;';
 document.body.appendChild(sc);
 const ks=document.createElement('style');
 ks.textContent='@keyframes sf{0%{transform:translateY(-20px) rotate(0)}100%{transform:translateY(110vh) rotate(600deg)}}';
 document.head.appendChild(ks);
-['❄','❅','·','•','∗','❆'].forEach((ch,i)=>{
+['❄','❅','·','•','∗','❆'].forEach((ch)=>{
   for(let j=0;j<3;j++){
     const s=document.createElement('span');
     const sz=.4+Math.random()*.7;
@@ -802,10 +1016,148 @@ document.head.appendChild(ks);
   }
 });
 
-/* reveal */
+/* ═══ REVEAL ═══ */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show');}),{threshold:.07});
 document.querySelectorAll('.rv').forEach(el=>io.observe(el));
 setTimeout(()=>document.querySelectorAll('.hero .rv').forEach(el=>el.classList.add('show')),60);
+
+/* ═══════════════════════════════════════════
+   ARG ENGINE
+   ═══════════════════════════════════════════ */
+
+/* Console ARG — discoverable by opening devtools */
+const C = [
+  '%c❄ ARCTIC SIGNER',
+  'color:#4ddeff;font-family:monospace;font-size:14px;font-weight:bold;',
+];
+console.log(...C);
+console.log('%c> initialising signal layer...','color:rgba(77,222,255,0.5);font-family:monospace;font-size:11px;');
+console.log('%c> three ciphers. one answer. you know what to do.','color:rgba(168,196,216,0.4);font-family:monospace;font-size:11px;');
+console.log('%c> hint: the hex knows.','color:rgba(168,196,216,0.2);font-family:monospace;font-size:11px;');
+console.log('%c> Ulepldqg','color:rgba(77,222,255,0.15);font-family:monospace;font-size:10px;');
+
+/* ARG CODES — all accepted answers */
+const VALID_CODES = ['PROJECTARCTIC','PROJECT ARCTIC'];
+
+/* Terminal state */
+const overlay  = document.getElementById('arg-overlay');
+const terminal = document.getElementById('arg-terminal');
+const termLog  = document.getElementById('term-log');
+const argInput = document.getElementById('arg-input');
+const hexEl    = document.getElementById('arg-hex');
+
+let tapCount = 0, tapTimer = null, termOpen = false, solved = false;
+
+/* ── Triple-tap / triple-click hex ── */
+hexEl.addEventListener('click', e => {
+  e.preventDefault();
+  if(solved) return;
+
+  tapCount++;
+
+  if(tapCount === 1){
+    hexEl.classList.add('tapped1');
+    tapTimer = setTimeout(()=>{tapCount=0;hexEl.classList.remove('tapped1','tapped2');},1400);
+  }
+  if(tapCount === 2){
+    hexEl.classList.add('tapped2');
+  }
+  if(tapCount >= 3){
+    clearTimeout(tapTimer);
+    tapCount = 0;
+    hexEl.classList.remove('tapped1','tapped2');
+    hexEl.classList.add('unlocking');
+    hexEl.addEventListener('animationend',()=>hexEl.classList.remove('unlocking'),{once:true});
+    setTimeout(openTerminal, 400);
+  }
+});
+
+function openTerminal(){
+  if(termOpen) return;
+  termOpen = true;
+  termLog.innerHTML = '';
+  overlay.classList.add('open');
+  typeLines([
+    {t:'<span class="cyan">arctic-signer</span> <span class="dim">v2.0 — restricted shell</span>', d:0},
+    {t:'<span class="dim">────────────────────────────────────</span>', d:80},
+    {t:'signal detected. three ciphers active.', d:180},
+    {t:'', d:280},
+    {t:'<span class="dim">CODE I   →</span> <span class="purple">numeric transposition</span>', d:380},
+    {t:'<span class="dim">CODE II  →</span> <span class="purple">caesar shift, -4</span>', d:480},
+    {t:'<span class="dim">CODE III →</span> <span class="purple">vigenere · two languages</span>', d:580},
+    {t:'', d:680},
+    {t:'enter access code to proceed.', d:780},
+    {t:'<span class="dim">_</span>', d:900},
+  ], ()=>{ argInput.focus(); });
+}
+
+function typeLines(lines, done){
+  lines.forEach(({t,d})=>{
+    setTimeout(()=>{
+      const ln = document.createElement('div');
+      ln.innerHTML = t;
+      termLog.appendChild(ln);
+      termLog.scrollTop = termLog.scrollHeight;
+    }, d);
+  });
+  setTimeout(done, lines[lines.length-1].d + 100);
+}
+
+function appendLog(html){
+  const ln = document.createElement('div');
+  ln.innerHTML = html;
+  termLog.appendChild(ln);
+  termLog.scrollTop = termLog.scrollHeight;
+}
+
+/* ── Input handling ── */
+argInput.addEventListener('keydown', e => {
+  if(e.key === 'Enter'){
+    const val = argInput.value.trim().toUpperCase();
+    argInput.value = '';
+    appendLog(`<span class="dim">❯</span> ${val}`);
+
+    if(VALID_CODES.includes(val)){
+      appendLog('<span class="green">✓ access granted. decrypting...</span>');
+      setTimeout(()=>{
+        overlay.classList.remove('open');
+        termOpen = false;
+        solved = true;
+        document.getElementById('success-overlay').classList.add('open');
+      }, 900);
+    } else if(val === 'ULEPLDQG'){
+      appendLog('<span class="purple">∷ glyph recognised. not the key. keep looking.</span>');
+    } else if(val === ''){
+      appendLog('<span class="dim">// no input</span>');
+    } else {
+      appendLog('<span class="red">✗ incorrect. the signal remains encrypted.</span>');
+      appendLog('<span class="dim">try again.</span>');
+    }
+  }
+  if(e.key === 'Escape'){
+    overlay.classList.remove('open');
+    termOpen = false;
+    tapCount = 0;
+  }
+});
+
+overlay.addEventListener('click', e=>{
+  if(e.target === overlay){
+    overlay.classList.remove('open');
+    termOpen = false;
+    tapCount = 0;
+  }
+});
+
+function closeSuccess(){
+  document.getElementById('success-overlay').classList.remove('open');
+}
+
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && document.getElementById('success-overlay').classList.contains('open')){
+    closeSuccess();
+  }
+});
 </script>
 </body>
 </html>
